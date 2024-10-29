@@ -1,28 +1,26 @@
 import * as React from "react";
 import {Dimensions, SafeAreaView, StyleSheet} from "react-native";
-import Toast from "react-native-toast-message";
 import SigninForm from "../components/forms/signin/SigninForm";
 import {useNavigation} from "@react-navigation/native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 
 const {width, height} = Dimensions.get("window");
 
+// Define your RootStackParamList
 type RootStackParamList = {
-    MainTabNavigator:  undefined; LogInScreen: undefined; DashboardScreen: undefined;
+    MainTabNavigator: undefined;
+    LogInScreen: undefined;
 };
 
-type LogInScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "MainTabNavigator">;
+type LogInScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const LogInScreen = () => {
     const navigation = useNavigation<LogInScreenNavigationProp>();
 
     const handleSigninSuccess = () => {
-
-        Toast.show({
-            type: 'success', text1: 'User successfully Signin! 👋'
-        });
-        navigation.navigate("MainTabNavigator")
+        navigation.replace("MainTabNavigator"); // Ensure MainTabNavigator contains the Dashboard tab
     };
+
     return (
         <SafeAreaView style={styles.container}>
             <SigninForm onSigninSuccess={handleSigninSuccess}/>

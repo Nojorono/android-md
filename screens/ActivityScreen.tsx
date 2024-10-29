@@ -1,8 +1,8 @@
-import * as React from "react";
-import {Text, StyleSheet, View, Dimensions, SafeAreaView, FlatList, TouchableOpacity} from "react-native";
-import { Image } from "expo-image";
+import React, { useState } from "react";
+import { Text, StyleSheet, View, Dimensions, SafeAreaView, TouchableOpacity, FlatList, RefreshControl } from "react-native";
 import { FontFamily, Color, Border, FontSize } from "../GlobalStyles";
-import ChartDashboard from "../components/ChartDashboard";
+import { Image } from "expo-image";
+import Toast from "react-native-toast-message";
 
 // Get screen width and height for dynamic styling
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -14,19 +14,32 @@ interface OrderItem {
     price: number;
 }
 
-const orders: OrderItem[] = [
+const initialOrders: OrderItem[] = [
     { id: '1', item: 'IN Product A', quantity: 2, price: 20.0 },
     { id: '2', item: 'IN Product B', quantity: 1, price: 15.0 },
     { id: '3', item: 'IN Product C', quantity: 5, price: 30.0 },
     { id: '4', item: 'IN Product D', quantity: 3, price: 25.0 },
-    { id: '5', item: 'IN Product D', quantity: 3, price: 25.0 },
-    { id: '6', item: 'IN Product D', quantity: 3, price: 25.0 },
-    { id: '7', item: 'IN Product D', quantity: 3, price: 25.0 },
 ];
 
+const ActivityScreen = () => {
+    const [orders, setOrders] = useState(initialOrders);
+    const [refreshing, setRefreshing] = useState(false);
 
+    const onRefresh = () => {
+        setRefreshing(true);
 
-const DashboardScreen = () => {
+        // Simulate a data fetch or an API call
+        setTimeout(() => {
+            // Update the orders array or fetch new data
+            setOrders([
+                ...initialOrders,
+                { id: `${orders.length + 1}`, item: 'IN Product E', quantity: 4, price: 22.0 },
+            ]);
+
+            setRefreshing(false); // End the refreshing animation
+        }, 2000); // Simulated fetch delay
+    };
+
     const renderOrderItem = ({ item }: { item: OrderItem }) => (
         <TouchableOpacity
             style={styles.orderItem}
@@ -51,24 +64,25 @@ const DashboardScreen = () => {
     );
 
     const handlePress = (item: OrderItem) => {
-        // Handle the button press event
         console.log("Pressed item:", item);
-        // You can navigate to a detail page or show a modal, etc.
     };
-
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.container}>
-                <ChartDashboard/>
-            </View>
-            <View style={styles.container}>
-                <Text style={styles.title}>Order List</Text>
+            <View style={styles.containerFluid}>
                 <FlatList
                     data={orders}
                     renderItem={renderOrderItem}
                     keyExtractor={item => item.id}
                     style={styles.orderList}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={["#0c4ca3"]} // Android: set refresh color
+                            tintColor="#0c4ca3" // iOS: set refresh color
+                        />
+                    }
                 />
             </View>
         </SafeAreaView>
@@ -76,33 +90,18 @@ const DashboardScreen = () => {
 };
 
 const styles = StyleSheet.create({
+    containerFluid: {
+        flex: 1, backgroundColor: "#fff", paddingHorizontal: SCREEN_WIDTH * 0.01,
+        paddingBottom: SCREEN_HEIGHT * 0.07,
+    },
     container: {
-        flex: 1, backgroundColor: "#fff", paddingHorizontal: SCREEN_WIDTH * 0.02, // Responsive padding
+        flex: 1, backgroundColor: "#fff", paddingHorizontal: SCREEN_WIDTH * 0.01,
         paddingVertical: SCREEN_HEIGHT * 0.01,
     },
     logo: {
-        width: SCREEN_WIDTH * 0.1,
-        height: SCREEN_WIDTH * 0.1,
-        // marginBottom: SCREEN_HEIGHT * 0.05,
-    },
-    appTitle: {
-        fontSize: FontSize.ptMedium1_size,
-        color: Color.navy,
-        textAlign: "center",
-        fontFamily: FontFamily.ptMedium,
-        fontWeight: "600",
-        marginBottom: SCREEN_HEIGHT * 0.03,
-    },
-    mainImage: {
-        width: SCREEN_WIDTH * 0.6,
-        height: SCREEN_HEIGHT * 0.12,
-        marginBottom: SCREEN_HEIGHT * 0.17,
-    },
-    title: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 1,
-        textAlign: 'left',
+        width: SCREEN_WIDTH * 0.2,
+        height: SCREEN_WIDTH * 0.2,
+        marginBottom: SCREEN_HEIGHT * 0.05,
     },
     orderList: {
         marginTop: 10,
@@ -112,8 +111,8 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         backgroundColor: '#f8f8f8',
         marginVertical: 8,
-        elevation: 1, // Adds shadow for Android
-        shadowColor: '#000', // Shadow for iOS
+        elevation: 1,
+        shadowColor: '#000',
         shadowOffset: {
             width: 0,
             height: 1,
@@ -121,22 +120,22 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 1.41,
     },
-    itemText: {
-        fontSize: 16,
-        color: "#333",
-    },
     gridContainer: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     grid1: {
-        flex: 1, // This will take 1 part of the available space
-        alignItems: 'center', // Center the content horizontally
+        flex: 1,
+        alignItems: 'center',
     },
     grid2: {
-        flex: 2, // This will take 2 parts of the available space
-        paddingLeft: 16, // Add some space between the image and text
+        flex: 2,
+        paddingLeft: 16,
+    },
+    itemText: {
+        fontSize: 14,
+        color: "#333",
     },
 });
 
-export default DashboardScreen;
+export default ActivityScreen;

@@ -31,12 +31,6 @@ const HelloScreen = () => {
             contentFit="cover"
             source={require("../assets/logo-nojorono-biru-2.png")}
         />
-        <Text style={styles.appTitle}>WMS Application Internal</Text>
-        {/*<Image*/}
-        {/*    style={styles.mainImage}*/}
-        {/*    contentFit="cover"*/}
-        {/*    source={require("../assets/group-6.png")}*/}
-        {/*/>*/}
         <ButtonFill
             continue1="Next"
             buttonFillPosition="relative"

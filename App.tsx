@@ -1,13 +1,14 @@
 import React from "react";
-import {NavigationContainer} from "@react-navigation/native";
-import {createNativeStackNavigator} from "@react-navigation/native-stack";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as Font from 'expo-font';
-import HelloScreen from "./screens/HelloScreen";
 import LogInScreen from "./screens/LogInScreen";
 import Toast from 'react-native-toast-message';
-import DashboardScreen from "./screens/DashboardScreen";
-import MainTabNavigator from "./navigation/MainTabNavigator"; // Import the MainTabNavigator
-
+import MainTabNavigator from "./navigation/MainTabNavigator";
+import { observer } from "mobx-react-lite";
+import Spinner from 'react-native-loading-spinner-overlay';
+import loadingStore from './stores/loadingStore';
+import authStore from "./stores/authStore";
 
 const Stack = createNativeStackNavigator();
 
@@ -18,23 +19,33 @@ const App = () => {
     });
 
     if (!fontsLoaded) {
-        return null;
+        return null; // You might want to show a loading screen here instead.
     }
 
-    return (<>
+    return (
+        <>
+            <Spinner
+                visible={loadingStore.loading}
+                color={'#0c4ca3'}
+                size={"large"}
+                animation={"fade"}
+            />
             <NavigationContainer>
-                <Stack.Navigator screenOptions={{headerShown: false}}>
-                    <Stack.Screen name="HelloScreen" component={HelloScreen}/>
-                    <Stack.Screen name="LogInScreen" component={LogInScreen}/>
-                    <Stack.Screen name="DashboardScreen" component={DashboardScreen}/>
-                    <Stack.Screen name="MainTabNavigator" component={MainTabNavigator}/>
+                <Stack.Navigator screenOptions={{ headerShown: false }}>
+                    {authStore.user ? (
+                        <Stack.Screen name="MainTabNavigator" component={MainTabNavigator} />
+                    ) : (
+                        <Stack.Screen name="LogInScreen" component={LogInScreen} />
+                    )}
                 </Stack.Navigator>
             </NavigationContainer>
             <Toast
                 position='top'
                 bottomOffset={20}
+                // Consider adding custom styling and configurations here
             />
-        </>);
+        </>
+    );
 };
 
-export default App;
+export default observer(App);

@@ -1,11 +1,23 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Dimensions, Platform, KeyboardAvoidingView } from "react-native";
+import React, {useEffect, useState} from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Dimensions,
+  Platform,
+  KeyboardAvoidingView,
+  Keyboard
+} from "react-native";
 import { Color, FontFamily, FontSize, Border } from "../../../GlobalStyles";
 import { Image } from "expo-image";
 import ButtonFill from "../../ButtonFill";
 import { signin } from "../../../utils/api/auth/signin";
 import { observer } from "mobx-react";
 import authStore from "../../../stores/authStore";
+import loadingStore from "../../../stores/loadingStore";
+import Toast from "react-native-toast-message";
 
 
 // Get screen width and height for dynamic styling
@@ -22,6 +34,8 @@ const SigninForm: React.FC<SigninFormProps> = ({ onSigninSuccess }) => {
   const [passwordValid, setPasswordValid] = useState(true);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
   let isValid: boolean | ((prevState: boolean) => boolean);
   const validateEmail = (input: string) => {
     isValid = !!input && input.includes("@");
@@ -48,41 +62,62 @@ const SigninForm: React.FC<SigninFormProps> = ({ onSigninSuccess }) => {
   };
 
   const handleSubmit = async () => {
+    loadingStore.setLoading(true);
     validateEmail(email)
     validatePassword(password)
-    authStore.setLoading(true);
     if (emailValid && passwordValid && isValid) {
       try {
-        // const response = await signin({ email, password });
-        // if (response.statusCode === 200) {
-        //   authStore.setUserData(response.data);
-        //   onSigninSuccess();
-        // }
-
-        //bypass
-        authStore.setUserData({ email, password });
-        onSigninSuccess();
+        const response = await signin({ email, password });
+        console.log(response)
+        if (response.statusCode === 200) {
+          authStore.setUserData(response.data);
+          onSigninSuccess();
+          Toast.show({
+            type: 'success', text1: 'User successfully Signin! 👋'
+          });
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to sign in. Please try again.";
+        Toast.show({
+          type: 'error', text1: 'Failed to sign in. Please try again.'
+        });
         console.error("Error signing in:", errorMessage);
       } finally {
-        authStore.setLoading(false);
+        loadingStore.setLoading(false);
       }
     }
+    loadingStore.setLoading(false);
   };
+
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardVisible(true);
+    });
+    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
+    };
+  }, []);
 
   return (
       <KeyboardAvoidingView
           style={styles.container}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 50 : 0}
+          behavior={Platform.OS === "android" ? "padding" : undefined}
+          keyboardVerticalOffset={Platform.OS === "android" ? 50 : 0}
       >
         {/* Email Field */}
-        <Image
-            style={styles.mainImage}
-            contentFit="cover"
-            source={require("../../../assets/logo-nojorono.png")}
-        />
+        {!isKeyboardVisible && (
+            <Image
+                style={styles.mainImage}
+                contentFit="cover"
+                source={require("../../../assets/logo-nojorono-biru-2.png")}
+            />
+        )}
         <View style={styles.fieldContainer}>
           <Text style={[styles.label, styles.text]}>Email</Text>
           <View style={styles.inputContainer}>
@@ -134,8 +169,9 @@ const SigninForm: React.FC<SigninFormProps> = ({ onSigninSuccess }) => {
             buttonFillPosition="relative"
             button1BackgroundColor="#0c4ca3"
             continueTextAlign="center"
-            continueLeft="44%"
+            continueLeft="43%"
             onPress={handleSubmit}
+            loading={loadingStore.loading}
         />
 
         {/* Forgot Password */}
@@ -150,9 +186,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    paddingTop : 50,
-    // justifyContent: "center",
-    padding: 30,
+    justifyContent: "center",
     backgroundColor: Color.colorWhite,
   },
   text: {
@@ -195,9 +229,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   mainImage: {
-    width: 210, // 60% of screen width
-    height: SCREEN_HEIGHT * 0.11, // 35% of screen height
-    marginBottom: SCREEN_HEIGHT * 0.02, // 10% of screen height
+    width: 200, // 60% of screen width
+    height: SCREEN_HEIGHT * 0.12,
+    marginBottom: SCREEN_HEIGHT * 0.05,
   },
 });
 

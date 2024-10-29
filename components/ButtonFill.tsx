@@ -18,6 +18,7 @@ export type ButtonFillType = {
   continueLeft?: number | string;
   continueTextAlign?: string;
   onPress?: () => void;
+  loading?: boolean
 };
 
 const getStyleValue = (key: string, value: string | number | undefined) => {
@@ -36,6 +37,7 @@ const ButtonFill = ({
                       continueLeft,
                       continueTextAlign,
                       onPress,
+                      loading,
                     }: ButtonFillType) => {
   const buttonFillStyle = useMemo(() => {
     return {
@@ -61,7 +63,7 @@ const ButtonFill = ({
   }, [continueLeft, continueTextAlign]);
 
   return (
-      <TouchableOpacity onPress={onPress} style={[styles.buttonFill, buttonFillStyle]}>
+      <TouchableOpacity disabled={loading} onPress={onPress} style={[styles.buttonFill, buttonFillStyle]}>
         <View style={[styles.button1, button1Style]} />
         <Text style={[styles.continue, continueStyle]}>{continue1}</Text>
       </TouchableOpacity>
@@ -90,9 +92,9 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   buttonFill: {
-    width: SCREEN_WIDTH * 0.85, // Use 85% of screen width for better responsiveness
-    height: 57,                // Fixed height, can be adjusted dynamically if needed
-    alignSelf: "center",        // Centers button horizontally
+    width: SCREEN_WIDTH * 0.80,
+    height: 50,
+    alignSelf: "center",
   },
 });
 

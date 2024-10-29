@@ -1,13 +1,11 @@
 import config from "../../../config/config";
 
-interface OrdersData {
+interface SigninData {
     email: string;
     password: string;
 }
 
-export const getOrders = async (data: OrdersData): Promise<any> => {
-    console.log("Data : ", JSON.stringify(data));
-
+export const signin = async (data: SigninData): Promise<any> => {
     try {
         const response = await fetch(`${config.apiBaseUrl}/auth/login`, {
             method: "POST",
@@ -18,7 +16,7 @@ export const getOrders = async (data: OrdersData): Promise<any> => {
         });
 
         if (!response.ok) {
-            throw new Error("Failed to sign up");
+            throw new Error("Failed to sign in");
         }
 
         return await response.json();

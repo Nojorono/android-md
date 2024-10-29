@@ -6,8 +6,6 @@ interface SigninData {
 }
 
 export const signin = async (data: SigninData): Promise<any> => {
-  console.log("Data : ", JSON.stringify(data));
-
   try {
     const response = await fetch(`${config.apiBaseUrl}/auth/login`, {
       method: "POST",
@@ -18,7 +16,7 @@ export const signin = async (data: SigninData): Promise<any> => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to sign up");
+      throw new Error("Failed to sign in");
     }
 
     return await response.json();
