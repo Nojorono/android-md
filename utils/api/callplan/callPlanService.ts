@@ -1,27 +1,11 @@
-import config from "../../../config/config";
+// utils/api/callplan/callPlanService.ts
+import axiosInstance from "../../../config/axiosInstance";
 
-interface SigninData {
-    email: string;
-    password: string;
-}
-
-export const signin = async (data: SigninData): Promise<any> => {
+export const getListCallPlanSchedule = async (id: string) => {
     try {
-        const response = await fetch(`${config.apiBaseUrl}/auth/login`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-        });
-
-        if (!response.ok) {
-            throw new Error("Failed to sign in");
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error("Error signing up:", (error as Error).message);
-        throw error as Error;
+        const response = await axiosInstance.get(`/call-plan/schedule-md/${id}`);
+        return response.data;
+    } catch (error: any) {
+        throw error.response;
     }
-};
+}

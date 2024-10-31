@@ -1,66 +1,119 @@
-import React, { useState } from "react";
-import { Text, StyleSheet, View, Dimensions, SafeAreaView, TouchableOpacity, FlatList, RefreshControl } from "react-native";
-import { FontFamily, Color, Border, FontSize } from "../GlobalStyles";
+import React, {useState, useEffect, useCallback} from "react";
+import {
+    Text,
+    StyleSheet,
+    View,
+    Dimensions,
+    SafeAreaView,
+    TouchableOpacity,
+    FlatList,
+    RefreshControl,
+    Linking, Button
+} from "react-native";
 import { Image } from "expo-image";
 import Toast from "react-native-toast-message";
+import { getListCallPlanSchedule } from "../utils/api/callplan/callPlanService";
+import authStore from "../stores/authStore";
+import {useFocusEffect} from "@react-navigation/core"; // Import the API call
 
-// Get screen width and height for dynamic styling
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
+// Define the structure of the fetched data for the item
 interface OrderItem {
     id: string;
-    item: string;
-    quantity: number;
-    price: number;
+    code_call_plan: string;
+    notes: string;
+    status: string;
+    callPlanOutlet: {
+        name: string;
+        address_line: string;
+        outlet_type: string;
+        longitude: string;
+        latitude: string;
+        photos: string[];
+    };
 }
 
-const initialOrders: OrderItem[] = [
-    { id: '1', item: 'IN Product A', quantity: 2, price: 20.0 },
-    { id: '2', item: 'IN Product B', quantity: 1, price: 15.0 },
-    { id: '3', item: 'IN Product C', quantity: 5, price: 30.0 },
-    { id: '4', item: 'IN Product D', quantity: 3, price: 25.0 },
-];
-
 const ActivityScreen = () => {
-    const [orders, setOrders] = useState(initialOrders);
+    const [orders, setOrders] = useState<OrderItem[]>([]);
     const [refreshing, setRefreshing] = useState(false);
+    const user = authStore.user.user
+    // Function to fetch data from the API
+    const fetchOrders = async () => {
+        try {
+            const response = await getListCallPlanSchedule(user.id);
+            if (response.statusCode === 200) {
+                setOrders(response.data)
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    };
+
+    // Refetch orders every time the screen is focused
+    useFocusEffect(
+        useCallback(() => {
+            fetchOrders();
+        }, [])
+    );
 
     const onRefresh = () => {
         setRefreshing(true);
-
-        // Simulate a data fetch or an API call
-        setTimeout(() => {
-            // Update the orders array or fetch new data
-            setOrders([
-                ...initialOrders,
-                { id: `${orders.length + 1}`, item: 'IN Product E', quantity: 4, price: 22.0 },
-            ]);
-
-            setRefreshing(false); // End the refreshing animation
-        }, 2000); // Simulated fetch delay
+        fetchOrders().finally(() => setRefreshing(false));
     };
 
-    const renderOrderItem = ({ item }: { item: OrderItem }) => (
-        <TouchableOpacity
-            style={styles.orderItem}
-            onPress={() => handlePress(item)} // Handle press event
-        >
-            <View style={styles.gridContainer}>
-                <Text>#{item.id}</Text>
-                <View style={styles.grid1}>
-                    <Image
-                        style={styles.logo}
-                        contentFit="cover"
-                        source={require("../assets/icon-box.svg")}
-                    />
+    // Function to open the map app with the provided latitude and longitude
+    const openMaps = (latitude: string, longitude: string) => {
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+        Linking.openURL(url).catch((err) => {
+            console.error("Failed to open map", err);
+            Toast.show({type: "error", text1: "Failed to open map"});
+        });
+    };
+
+    const renderOrderItem = ({item}: { item: OrderItem }) => (
+        <>
+            <TouchableOpacity style={styles.orderItem} onPress={() => handlePress(item)}>
+                <View style={styles.gridContainer}>
+                    <View style={styles.grid1}>
+                        <Image
+                            style={styles.logo}
+                            contentFit="cover"
+                            source={{uri: "https://cdn.vuetifyjs.com/images/lists/1.jpg"}}
+                        />
+                    </View>
+                    <View style={styles.grid2}>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Plan Code:</Text>
+                            <Text style={styles.value}>{item.code_call_plan}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Notes:</Text>
+                            <Text style={styles.value}>{item.notes}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Outlet:</Text>
+                            <Text style={styles.value}>{item.callPlanOutlet.name}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Type:</Text>
+                            <Text style={styles.value}>{item.callPlanOutlet.outlet_type}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Address:</Text>
+                            <Text style={styles.value}>{item.callPlanOutlet.address_line}</Text>
+                        </View>
+                    </View>
                 </View>
-                <View style={styles.grid2}>
-                    <Text style={styles.itemText}>{item.item}</Text>
-                    <Text style={styles.itemText}>Quantity: {item.quantity}</Text>
-                    <Text style={styles.itemText}>Price: ${item.price.toFixed(2)}</Text>
-                </View>
-            </View>
-        </TouchableOpacity>
+            </TouchableOpacity>
+            {/* "View on Map" Button */}
+            <TouchableOpacity
+                onPress={() => openMaps('-6.198453', '106.802473')}
+                style={styles.button}
+            >
+                <Text style={styles.buttonText}>View on Map</Text>
+            </TouchableOpacity>
+        </>
     );
 
     const handlePress = (item: OrderItem) => {
@@ -73,14 +126,14 @@ const ActivityScreen = () => {
                 <FlatList
                     data={orders}
                     renderItem={renderOrderItem}
-                    keyExtractor={item => item.id}
+                    keyExtractor={(item) => item.id.toString()}
                     style={styles.orderList}
                     refreshControl={
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            colors={["#0c4ca3"]} // Android: set refresh color
-                            tintColor="#0c4ca3" // iOS: set refresh color
+                            colors={["#0c4ca3"]}
+                            tintColor="#0c4ca3"
                         />
                     }
                 />
@@ -91,11 +144,15 @@ const ActivityScreen = () => {
 
 const styles = StyleSheet.create({
     containerFluid: {
-        flex: 1, backgroundColor: "#fff", paddingHorizontal: SCREEN_WIDTH * 0.01,
+        flex: 1,
+        backgroundColor: "#fff",
+        paddingHorizontal: SCREEN_WIDTH * 0.01,
         paddingBottom: SCREEN_HEIGHT * 0.07,
     },
     container: {
-        flex: 1, backgroundColor: "#fff", paddingHorizontal: SCREEN_WIDTH * 0.01,
+        flex: 1,
+        backgroundColor: "#fff",
+        paddingHorizontal: SCREEN_WIDTH * 0.01,
         paddingVertical: SCREEN_HEIGHT * 0.01,
     },
     logo: {
@@ -113,10 +170,7 @@ const styles = StyleSheet.create({
         marginVertical: 8,
         elevation: 1,
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.2,
         shadowRadius: 1.41,
     },
@@ -135,6 +189,38 @@ const styles = StyleSheet.create({
     itemText: {
         fontSize: 14,
         color: "#333",
+    },
+    button: {
+        backgroundColor: '#0c4ca3',
+        paddingVertical: 12,
+        paddingHorizontal: 25,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginVertical: 1,
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 6,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+    },
+    label: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#333',
+        width: '30%',
+    },
+    value: {
+        fontSize: 12,
+        color: '#555',
+        width: '65%',
+        textAlign: 'right',
     },
 });
 

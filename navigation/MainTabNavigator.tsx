@@ -8,11 +8,11 @@ import AttendanceScreen from "../screens/AttendanceScreen";
 import ActivityScreen from "../screens/ActivityScreen";
 
 type MainTabParamList = {
-    Dashboard: undefined; // No parameters
-    Reimburse: undefined; // No parameters
-    Attendance: undefined; // No parameters
-    Activity: undefined; // No parameters
-    Settings: undefined; // No parameters
+    Dashboard: undefined;
+    Reimburse: undefined;
+    Attendance: undefined;
+    Activity: undefined;
+    Settings: undefined;
 };
 // Define the type for your tab navigator
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -20,6 +20,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 const MainTabNavigator = () => {
     return (
         <Tab.Navigator
+            initialRouteName={'Dashboard'}
             screenOptions={({ route }) => ({
                 tabBarIcon: ({ focused, color, size }) => {
                     let iconName: keyof typeof Ionicons.glyphMap = "home-outline";
@@ -51,9 +52,9 @@ const MainTabNavigator = () => {
                 },
             })}
         >
-            <Tab.Screen name="Dashboard" component={DashboardScreen} />
             <Tab.Screen name="Activity" component={ActivityScreen} />
             <Tab.Screen name="Attendance" component={AttendanceScreen} />
+            <Tab.Screen name="Dashboard" component={DashboardScreen} />
             <Tab.Screen name="Reimburse" component={ReimburseScreen} />
             <Tab.Screen name="Settings" component={SettingsScreen} />
         </Tab.Navigator>
