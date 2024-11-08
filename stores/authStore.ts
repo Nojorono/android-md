@@ -9,14 +9,14 @@ class AuthStore {
     this.loadUser();
   }
 
-  setUser(user: any) {
+  async setUser(user: any) {
     this.user = user;
-    this.saveUser(user);
+    await this.saveUser(user);
   }
 
-  setUserData(data: any) {
+  async setUserData(data: any) {
     this.user = data;
-    this.saveUser(data);
+    await this.saveUser(data);
   }
 
   async saveUser(user: any) {

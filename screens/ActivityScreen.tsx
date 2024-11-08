@@ -8,13 +8,16 @@ import {
     TouchableOpacity,
     FlatList,
     RefreshControl,
-    Linking, Button
+    Linking,
 } from "react-native";
 import { Image } from "expo-image";
 import Toast from "react-native-toast-message";
 import { getListCallPlanSchedule } from "../utils/api/callplan/callPlanService";
 import authStore from "../stores/authStore";
-import {useFocusEffect} from "@react-navigation/core"; // Import the API call
+import {useFocusEffect} from "@react-navigation/core";
+import {useNavigation} from "@react-navigation/native";
+import {NativeStackNavigationProp} from "@react-navigation/native-stack";
+import SurveyForm from "./Activity/SurveyForm"; // Import the API call
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -34,7 +37,15 @@ interface OrderItem {
     };
 }
 
+// Define your RootStackParamList
+type RootStackParamList = {
+    SurveyForm: { itemId: string } | undefined; // Define SurveyForm and its parameters
+};
+
+type ActivityScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const ActivityScreen = () => {
+    const navigation = useNavigation<ActivityScreenNavigationProp>();
     const [orders, setOrders] = useState<OrderItem[]>([]);
     const [refreshing, setRefreshing] = useState(false);
     const user = authStore.user.user
@@ -46,6 +57,7 @@ const ActivityScreen = () => {
                 setOrders(response.data)
             }
         } catch (error) {
+            setOrders([])
             console.log(error)
         }
     };
@@ -117,7 +129,8 @@ const ActivityScreen = () => {
     );
 
     const handlePress = (item: OrderItem) => {
-        console.log("Pressed item:", item);
+        navigation.navigate("SurveyForm", { itemId: item.id });
+
     };
 
     return (

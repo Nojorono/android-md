@@ -27,12 +27,14 @@ axiosInstance.interceptors.request.use(
 // Optional response interceptor to handle global response errors
 axiosInstance.interceptors.response.use(
     (response) => response, // Pass through successful responses
-    (error) => {
+    async (error) => {
         if (error.response && error.response.status === 401) {
+            await authStore.clearUser(); // Clear the user on 401 Unauthorized
             Toast.show({
                 type: 'error', text1: 'Unauthorized, please logout and try again later',
             });
             console.log('Unauthorized! Redirecting...');
+
         }
         return Promise.reject(error); // Handle response errors
     }
